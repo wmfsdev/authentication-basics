@@ -1,5 +1,4 @@
 require('dotenv').config()
-console.log(process.env)
 
 const express = require("express");
 const bcrypt = require("bcryptjs")
@@ -38,9 +37,10 @@ passport.use(
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
       };
-      if (user.password !== password) {
-        return done(null, false, { message: "Incorrect password" });
-      };
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        return done(null, false, { message: "Incorrect password" })
+      }
       return done(null, user);
     } catch(err) {
       return done(err);
@@ -62,39 +62,35 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.get("/", (req, res) => {
-  console.log("hey")
-  res.render("index", { user: req.user });
+  res.render("index", { user: req.user, message: req.session.messages });
 });
-
 
 app.get("/sign-up", (req, res) => res.render("sign-up-form"));
 
 app.post("/sign-up", async (req, res, next) => {
-  
-    try {
+  try {
     bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
       if (err) console.log("ooops")
       else {
         const user = new User({
-        username: req.body.username,
-        password: hashedPassword
-      });
-      const result = await user.save();
-      
-    }
-  });
-      res.redirect("/");
-      
-    } catch(err) {
+          username: req.body.username,
+          password: hashedPassword
+        });
+        await user.save();
+      }
+    });
+    res.redirect("/");
+  } catch(err) {
       return next(err);
-    };
+  };
 });
 
 app.post(
   "/log-in",
   passport.authenticate("local", {
     successRedirect: "/",
-    failureRedirect: "/"
+    failureRedirect: "/",
+    failureMessage: true
   })
 );
 
