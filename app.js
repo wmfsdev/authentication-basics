@@ -70,13 +70,21 @@ app.get("/", (req, res) => {
 app.get("/sign-up", (req, res) => res.render("sign-up-form"));
 
 app.post("/sign-up", async (req, res, next) => {
+  
     try {
-      const user = new User({
+    bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
+      if (err) console.log("ooops")
+      else {
+        const user = new User({
         username: req.body.username,
-        password: req.body.password
+        password: hashedPassword
       });
       const result = await user.save();
+      
+    }
+  });
       res.redirect("/");
+      
     } catch(err) {
       return next(err);
     };
