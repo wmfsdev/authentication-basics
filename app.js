@@ -2,6 +2,7 @@ require('dotenv').config()
 console.log(process.env)
 
 const express = require("express");
+const bcrypt = require("bcryptjs")
 const path = require("path");
 const session = require("express-session");
 const passport = require("passport");
